@@ -1,0 +1,2 @@
+# 1 The life style action buttons are on top of the actual tom, make adjustments in the layout so that both tom and the buttons are seen clearly
+# 2 When doing life style actions add some sounds like water splash when taking bath and while eating some churning sound etc

@@ -1,0 +1,38 @@
+{
+  "ci": {
+    "collect": {
+      "staticDistDir": "./build",
+      "numberOfRuns": 1,
+      "settings": {
+        "preset": "desktop",
+        "throttling": {
+          "cpuSlowdownMultiplier": 1
+        }
+      }
+    },
+    "assert": {
+      "preset": "lighthouse:recommended",
+      "assertions": {
+        "categories:performance": ["warn", { "minScore": 0.8 }],
+        "categories:accessibility": ["error", { "minScore": 0.9 }],
+        "categories:best-practices": ["warn", { "minScore": 0.8 }],
+        "categories:seo": ["warn", { "minScore": 0.8 }],
+        "categories:pwa": ["warn", { "minScore": 0.6 }],
+        "offscreen-images": "off",
+        "uses-http2": "off",
+        "uses-long-cache-ttl": "off",
+        "non-composited-animations": "off",
+        "bf-cache": "off",
+        "themed-omnibox": "off",
+        "maskable-icon": ["warn", { "auditRan": false }],
+        "errors-in-console": ["warn", { "minScore": 0 }],
+        "network-dependency-tree-insight": ["warn", { "maxLength": 10 }],
+        "render-blocking-insight": ["warn", { "maxLength": 10 }],
+        "render-blocking-resources": ["warn", { "maxLength": 10 }]
+      }
+    },
+    "upload": {
+      "target": "temporary-public-storage"
+    }
+  }
+}

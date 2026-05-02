@@ -1,0 +1,10 @@
+@file:orchestrator.agent.md "Initialize end-to-end SDLC workflow.
+Load Input: Read the PRD at ./docs/PRD.md.
+Initialize State: Set workflow-token.json owner to 'Analyst' and create the initial global-workflow-state.md.
+Sequence Execution:
+Call Analyst to generate user stories in docs/requirements/.
+Upon completion, hand off to Architect for ADR and schema design.
+Upon approval, trigger Developer for implementation and unit tests.
+Finally, route to QA for regression and E2E validation.
+One-Go Mode: Proceed through all phases autonomously. Only pause if a 'Never Do' boundary is hit or a critical conflict arises.
+Begin Phase 1 now."

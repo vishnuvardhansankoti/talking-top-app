@@ -1,0 +1,34 @@
+generate a PRD for a Talking Tom-style Static PWA
+Role: You are an expert Product Manager and Technical Architect specializing in high-performance Static Web Apps (SWA) and Progressive Web Apps (PWA). 
+
+Task: Generate a comprehensive Product Requirements Document (PRD) for a virtual pet application similar to "Talking Tom." The app must be built as a Static Web App using the Svelte tech stack. 
+
+Product Vision:
+Core Experience: An interactive 3D character that repeats what the user says in a modified voice and responds to touch gestures (poking, petting) with unique animations.
+Accessibility: Must be an installable PWA that works offline using service workers. 
+
+Technical Constraints:
+Frontend: Svelte (or SvelteKit) for the UI and state management.
+3D Engine: Threlte (Three.js for Svelte) to handle the .glb character model and animations.
+Voice Interaction: Must use the native Web Speech API (SpeechRecognition for input and SpeechSynthesis for output) to keep it a static web app without backend dependencies.
+PWA: Include a manifest.json and a service worker strategy for caching 3D assets and audio files. 
+
+YouTube
+ +6
+PRD Requirements:
+User Personas: Define target users (e.g., children, casual gamers). 
+
+Core User Stories: Detail the "Listen and Repeat" loop and gesture interactions. 
+
+Feature Specifications:
+Interactive 3D Stage: Rendering the character and environment using Threlte.
+Animation State Machine: How the character transitions between Idle, Listening, Speaking, and Reacting (to touch).
+Audio Processor: Capturing user voice, applying a simple pitch-shift (if possible via Web Audio API), and playback. 
+
+Information Architecture: A map of the Svelte component structure (e.g., CharacterCanvas.svelte, Controls.svelte, VoiceHandler.svelte). 
+
+Offline Strategy: Specifics for the service worker to handle large 3D model files. 
+
+Performance Goals: Target frames-per-second (FPS) and initial load times for a static site. 
+
+Output Format: Use clear Markdown headers, bulleted lists for features, and a technical section outlining the suggested folder structure. 

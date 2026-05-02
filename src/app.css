@@ -1,0 +1,27 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+	--color-bg: #1a1a2e;
+	--color-mid: #16213e;
+	--color-accent: #0f3460;
+	--color-highlight: #e94560;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+	height: 100%;
+	width: 100%;
+	overflow: hidden;
+	background-color: var(--color-bg);
+	color: white;
+	font-family: system-ui, -apple-system, sans-serif;
+}
+
+* {
+	box-sizing: border-box;
+	-webkit-tap-highlight-color: transparent;
+}
