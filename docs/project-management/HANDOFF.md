@@ -3,10 +3,10 @@
 
 | Metadata | Value |
 |----------|-------|
-| Current Phase | Orchestrator Sign-off ✅ Complete |
-| Input File | `docs/requirements/sprint8-layout-and-audio.md` |
-| Active Agent | Orchestrator (sprint complete — ready for next sprint planning) |
-| Success Criteria | ✅ All met — 146/146 unit tests, 160/160 E2E, build clean |
+| Current Phase | Testing ⬜ Pending |
+| Input File | `docs/project-management/PR_SUMMARY.md` |
+| Active Agent | QA |
+| Success Criteria | Execute the production provisioning and deployment workflows, then verify the hosted Azure URL and approval-gated production release path |
 | Context Link | [`global-workflow-state.md`](global-workflow-state.md) |
 
 ---
@@ -40,6 +40,21 @@
 ---
 
 ## Handoff Log
+
+- Developer -> QA (Sprint 9)
+  - Output: Added production-only Azure Static Web App IaC, GitHub Actions workflows, setup docs, and OIDC bootstrap script.
+  - Validation: `npm test` 148/148 passed; `npm run build` passed; diagnostics reported no errors in edited workflow/IaC/doc files.
+  - QA task: Run provisioning and deployment against the real Azure `production` environment and verify the hosted URL.
+  - Blocker: GitHub `production` environment variables and `AZURE_STATIC_WEB_APPS_API_TOKEN` must be configured before hosted QA can execute.
+
+- Architect -> Developer (Sprint 9)
+  - Output: Approved deployment architecture for Azure Static Web Apps using separate provisioning and deployment workflows.
+  - Output: Defined OIDC auth model, production-only GitHub Environment gating, and repository file layout for IaC and setup docs.
+  - Developer task: Implement `.github/workflows`, `.azure/pipeline-setup.md`, `infra/static-web-app`, and auth bootstrap script for production deployment.
+
+- Analyst -> Architect (Sprint 9)
+  - Finding: Repository has no existing Azure deployment workflow, no `.azure` setup docs, and no IaC baseline.
+  - Scope: Provision and deploy a new Azure Static Web App through GitHub Actions with environment-aware approvals.
 
 - QA -> Orchestrator (Sprint 8) ✅
   - Result: Sprint 8 validation complete; all quality gates passed.

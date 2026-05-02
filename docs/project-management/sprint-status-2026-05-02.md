@@ -79,3 +79,31 @@ Post-QA remediation has passed QA validation and is ready for release handoff.
 
 - Firefox E2E regression discovered during QA: compatibility warning banner intercepted pointer events.
 - Fixed by setting `.compat-warning { pointer-events: none; }` and `.compat-warning button { pointer-events: auto; }`.
+
+---
+
+## Sprint 9: Azure Static Web App Deployment — 🟡 IN PROGRESS
+
+**Orchestrator Review:** Session 11  
+**Scope:** CR-3 (provision and deploy production via GitHub Actions)
+
+| Track | Status | Notes |
+|-------|--------|-------|
+| Analyst: requirements | ✅ Complete | `docs/requirements/sprint9-azure-static-web-app-deployment.md` |
+| Architect: design | ✅ Complete | `docs/project-management/ADR-sprint9.md` |
+| Developer: implementation | ✅ Complete | Production-only workflows, IaC, auth setup docs, bootstrap script, and PR summary added |
+| QA: validation | ⬜ Pending | Await Azure-hosted deployment verification |
+
+### Planned Verification Summary
+
+| Command / Gate | Expected Result |
+|----------------|-----------------|
+| `npm test` | ✅ pass before deployment jobs |
+| `npm run build` | ✅ static output ready for Azure Static Web Apps |
+| GitHub Actions workflow review | ✅ no deployment on `pull_request`; env-gated on deploy |
+| Azure-hosted smoke test | ⬜ pending Developer + QA handoff |
+
+### Notes
+
+- Story targets a new production Azure Static Web App provisioned and deployed through GitHub Actions.
+- Repository currently has no `.github`, `.azure`, or `infra` deployment baseline; Sprint 9 begins from zero deployment automation.

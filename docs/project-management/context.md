@@ -1,54 +1,47 @@
 # Sprint Context
-## Talking Tom PWA - Sprint 8: Layout + Lifestyle Audio
+## Talking Tom PWA - Sprint 9: Azure Static Web App Deployment
 
-**Sprint:** Sprint 8 - Layout + Lifestyle Audio  
+**Sprint:** Sprint 9 - Azure Static Web App Deployment  
 **Date:** May 2, 2026  
-**Sprint Goal:** Deliver CR-1 and CR-2: separate lifestyle buttons from Tom's 3D canvas (no overlap) and add action sound effects (bath/food/pee/sleep) with SSG-safe fallback audio behavior.
+**Sprint Goal:** Deliver CR-3: provision a new production Azure Static Web App and deploy the Talking Tom static build through GitHub Actions with production approval gating and Azure-authenticated automation.
 
 
 ## Current Scope
 
 ### Analyst Scope (✅ Complete)
-- Requirements doc: `docs/requirements/sprint8-layout-and-audio.md`
-- CR-1: layout separation between Tom canvas and lifestyle action buttons
-- CR-2: lifestyle action sound effects with non-crashing fallback behavior
-- Acceptance criteria: US-8.1 through US-8.5 marked [Final]
+- Requirements doc: `docs/requirements/sprint9-azure-static-web-app-deployment.md`
+- CR-3: provision and deploy Talking Tom to Azure Static Web Apps via GitHub Actions
+- Acceptance criteria: US-9.1 through US-9.4 marked [Final]
 
 ### Architect Scope (✅ Complete)
-- ADR doc: `docs/project-management/ADR-sprint8.md`
-- Layout design: `.viewport` flex column with `.canvas-area` above `LifestylePanel`
-- Audio design: `lifestyleAudioService` with mp3-first playback and oscillator fallback
-- SSG safety requirement: lazy AudioContext initialization behind `typeof window` guard
+- ADR doc: `docs/project-management/ADR-sprint9.md`
+- Pipeline design: separate infra provisioning and application deployment workflows
+- Security design: GitHub OIDC with `azure/login@v2` and a dedicated pipeline managed identity
+- Environment design: single `production` GitHub Environment with gated deployment
 
 ### Developer Scope (✅ Complete)
-- `src/routes/+page.svelte` — refactored to render `LifestylePanel` below canvas; no overlap
-- `src/lib/services/lifestyleAudioService.ts` — new audio service with fallback oscillator tones
-- `src/lib/services/lifestyleService.ts` — action sound playback + sleep-stop integration
-- `src/lib/services/lifestyleAudioService.test.ts` — 11 audio behavior tests
-- `src/lib/types/index.ts` — added `LifestyleSound` type
+- Added `.github/workflows/infra-deploy.yml` for production Azure provisioning
+- Added `.github/workflows/deploy-static-web-app.yml` for validate/build/deploy flow
+- Added `.azure/pipeline-setup.md` and `scripts/setup-azure-auth-for-pipeline.sh`
+- Added `infra/static-web-app/` Bicep definitions and the production parameter file
+- Generated `docs/project-management/PR_SUMMARY.md` and validation evidence
 
-### QA Scope (✅ Complete)
-- 146/146 unit tests pass (includes new audio test file)
-- 160/160 Playwright E2E pass
-- Build passes (`npm run build`)
-- Firefox click interception regression fixed (`.compat-warning` pointer events)
-
-### Post-QA Remediation (Session 10)
-- Fixed Firefox E2E failures caused by compat-warning intercepting clicks on settings/mic controls
-- Applied non-blocking banner style while keeping dismiss button interactive
-- Revalidated with targeted Firefox critical flows and full Playwright matrix
+### QA Scope (⬜ Pending)
+- Verify provisioning workflow succeeds for the production environment
+- Verify deployment workflow publishes `build/` to Azure Static Web Apps
+- Validate hosted Azure URL and confirm approval gates behave correctly
 
 ---
 
-## Acceptance Criteria (Sprint 8)
+## Acceptance Criteria (Sprint 9)
 
 | ID | Criteria | Status |
 |----|----------|--------|
-| AC-S8-01 | Lifestyle panel is visually separated from Tom canvas and no overlap occurs | ✅ |
-| AC-S8-02 | Bath/Food/Pee/Sleep actions trigger corresponding sound behavior | ✅ |
-| AC-S8-03 | Sleep sound loops and stops on wake/finish transitions | ✅ |
-| AC-S8-04 | Audio logic is SSG-safe (no module-top AudioContext init; window-guarded) | ✅ |
-| AC-S8-05 | Unit tests include explicit fallback + decode paths for audio playback | ✅ |
-| AC-S8-06 | `npm test` passes (146/146) | ✅ |
-| AC-S8-07 | `npm run build` succeeds | ✅ |
-| AC-S8-08 | `npx playwright test --reporter=line` passes (160/160) | ✅ |
+| AC-S9-01 | IaC exists for the production Azure Static Web App target | 🟡 |
+| AC-S9-02 | Provisioning runs in a dedicated GitHub Actions workflow | 🟡 |
+| AC-S9-03 | Deployment workflow builds and deploys the static output from `build/` | 🟡 |
+| AC-S9-04 | `pull_request` runs validation only and does not deploy to Azure | 🟡 |
+| AC-S9-05 | Azure authentication uses OIDC with `azure/login@v2` | 🟡 |
+| AC-S9-06 | The `production` GitHub Environment approval gates deployment | 🟡 |
+| AC-S9-07 | Setup guide documents auth bootstrap and rollback steps | 🟡 |
+| AC-S9-08 | QA verifies the Azure-hosted URL after deployment | ⬜ |

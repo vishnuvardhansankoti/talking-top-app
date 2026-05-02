@@ -2,11 +2,26 @@
 ## Talking Tom PWA - Agent Handoff Log
 
 **Project Start:** May 1, 2026  
-**Current Phase:** Testing ✅ Complete
+**Current Phase:** Development 🟡 In Progress
 
 ---
 
 ## Handoff Log
+
+### 2026-05-02 (Session 11) - Sprint 9 Azure Deployment Story Opened
+- Event: User requested a new lifecycle story for deploying the app to Azure Static Web Apps via GitHub Actions.
+- Analyst -> Architect
+  - Defined `CR-3` and finalized requirements in `docs/requirements/sprint9-azure-static-web-app-deployment.md`.
+  - Confirmed repository has no existing `.github`, `.azure`, or `infra` deployment baseline.
+- Architect -> Developer
+  - Approved `docs/project-management/ADR-sprint9.md`.
+  - Set implementation direction: separate infra and app deploy workflows, OIDC auth, production GitHub Environment approval, and Bicep-based provisioning.
+- Developer -> QA
+  - Implemented production-only Azure Static Web App IaC, GitHub Actions workflows, setup docs, and bootstrap script.
+  - Validation evidence: `npm test` 148/148 pass, `npm run build` pass, diagnostics clean.
+  - QA remains blocked on real Azure `production` environment configuration and deployment token setup.
+- Current token holder: QA.
+- Next gate: run provisioning/deployment against Azure and verify the hosted production URL.
 
 ### 2026-05-02 (Session 3) - Scoped Stabilization Cycle Complete
 - Event: User requested continuation while skipping long-running full E2E run.

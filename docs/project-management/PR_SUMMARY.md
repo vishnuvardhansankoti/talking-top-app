@@ -1,28 +1,27 @@
 # PR Summary
-## Sprint 6 Post-QA Remediation
+## Sprint 9 Production Azure Static Web App Deployment
 
 ## Objective
-Address user-reported post-implementation issues:
-1. Tom appears but does not read clearly as the character.
-2. Repeat voice may not trigger when recording stops automatically on silence.
+Provision and deploy the Talking Tom static build to a single Azure Static Web App production environment via GitHub Actions.
 
 ## Changes
-- Updated procedural GLB generation in `scripts/generate-tom-glb.mjs`:
-  - Added clear cat features (ears, eyes, pupils, nose, belly patch)
-  - Adjusted material palette for better character readability
-  - Regenerated `static/models/Tom.glb` (now ~96.4 KB)
-- Updated scene framing:
-  - `src/lib/components/3d/Stage3D.svelte` camera tuned for better portrait framing
-  - `src/lib/components/3d/TomCharacter.svelte` position adjusted upward
-  - Added GLB cache-busting query to avoid stale PWA-cached model
-- Fixed repeat-voice auto-stop path:
-  - Added recording-stopped callback hook in `src/lib/services/audioService.ts`
-  - Wired callback in `src/lib/components/ui/MicrophoneButton.svelte` so auto-stop and manual-stop share the same repeat flow
+- Added production-only Azure Static Web App infrastructure:
+  - `infra/static-web-app/main.bicep`
+  - `infra/static-web-app/parameters/production.bicepparam`
+- Added production-only GitHub Actions workflows:
+  - `.github/workflows/infra-deploy.yml` for OIDC-authenticated provisioning
+  - `.github/workflows/deploy-static-web-app.yml` for validate/build/deploy with no deployment on `pull_request`
+- Added Azure pipeline setup assets:
+  - `.azure/pipeline-setup.md`
+  - `scripts/setup-azure-auth-for-pipeline.sh`
+- Updated Sprint 9 orchestration docs to reflect a single `production` environment instead of `dev`/`staging`/`production`.
 
 ## Validation
-- `npm run test` -> 123/123 pass
-- `npm run build` -> success
+- `npm test` -> 148/148 pass
+- `npm run build` -> success, static output written to `build`
+- Diagnostics -> no errors reported in the new workflow, IaC, script, or Sprint 9 documentation files
 
 ## Remaining QA Gate
-- Re-run Playwright smoke validation on the remediated build.
-- Manual verification: both manual stop and auto-stop should trigger Tom repeat voice.
+- Configure the real GitHub `production` environment variables and `AZURE_STATIC_WEB_APPS_API_TOKEN` secret.
+- Run the provisioning workflow against Azure.
+- Run the deployment workflow and verify the hosted production URL.

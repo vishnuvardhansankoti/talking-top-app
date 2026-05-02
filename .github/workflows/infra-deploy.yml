@@ -1,0 +1,72 @@
+name: Provision Azure Static Web App Infra
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'infra/static-web-app/**'
+      - '.github/workflows/infra-deploy.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: infra-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  TEMPLATE_FILE: infra/static-web-app/main.bicep
+
+jobs:
+  validate-template:
+    name: Validate Bicep template
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Build Bicep template
+        uses: azure/cli@v2
+        with:
+          inlineScript: |
+            az bicep build --file "$TEMPLATE_FILE"
+
+  provision-production:
+    name: Provision production
+    runs-on: ubuntu-latest
+    needs: validate-template
+    environment: production
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Ensure resource group exists
+        uses: azure/cli@v2
+        with:
+          inlineScript: |
+            az group create \
+              --name "${{ vars.AZURE_RESOURCE_GROUP }}" \
+              --location "${{ vars.AZURE_LOCATION }}"
+
+      - name: Deploy Bicep template
+        uses: azure/cli@v2
+        with:
+          inlineScript: |
+            az deployment group create \
+              --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
+              --template-file "$TEMPLATE_FILE" \
+              --parameters @infra/static-web-app/parameters/production.bicepparam \
+              staticWebAppName="${{ vars.AZURE_STATIC_WEB_APP_NAME }}" \
+              location="${{ vars.AZURE_LOCATION }}" \
+              repositoryUrl="https://github.com/${{ github.repository }}" \
+              branch="main"
