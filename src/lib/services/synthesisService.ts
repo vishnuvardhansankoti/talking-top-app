@@ -25,7 +25,7 @@ const SPEECH_START_TIMEOUT_MS = 1500;
 const SPEECH_MIN_TIMEOUT_MS = 4000;
 const SPEECH_MAX_TIMEOUT_MS = 18000;
 
-function isIOSChrome(): boolean {
+export function isIOSChrome(): boolean {
 	if (typeof navigator === 'undefined') return false;
 	const ua = navigator.userAgent || '';
 	return /iP(hone|ad|od)/i.test(ua) && /CriOS/i.test(ua);

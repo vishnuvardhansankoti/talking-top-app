@@ -14,7 +14,12 @@
 		playbackWithPitchShift,
 		setRecordingStoppedCallback
 	} from '$lib/services/audioService';
-	import { speakTranscript, isSpeechSynthesisSupported, loadVoices } from '$lib/services/synthesisService';
+	import {
+		speakTranscript,
+		isSpeechSynthesisSupported,
+		loadVoices,
+		isIOSChrome
+	} from '$lib/services/synthesisService';
 	import { appState, audioState } from '$lib/stores';
 
 	// Prime voice list on mount (Chrome async voices)
@@ -30,6 +35,12 @@
 
 	async function repeatCapturedAudio(blob: Blob | null): Promise<void> {
 		const transcript = $audioState.transcript;
+
+		if (blob && isIOSChrome()) {
+			// iPhone Chrome can intermittently fail/lag with SpeechSynthesis; prefer deterministic blob playback.
+			await playbackWithPitchShift(blob, $appState.settings.pitchShift);
+			return;
+		}
 
 		if (transcript && isSpeechSynthesisSupported()) {
 			// Primary path: speak transcript in Tom's funny high-pitched voice
