@@ -27,7 +27,7 @@ Recommended shell inputs:
 
 ```bash
 export REPO_OWNER=vishnuvardhansankoti
-export REPO_NAME=talking-top-app
+export REPO_NAME=talking-tom-app
 export AZURE_SUBSCRIPTION_ID='vishnusankoti-product-pocs'
 export AZURE_TENANT_ID='508e46f2-cd47-4e73-9d05-bede96f92469'
 export AZURE_LOCATION='eastus2'
