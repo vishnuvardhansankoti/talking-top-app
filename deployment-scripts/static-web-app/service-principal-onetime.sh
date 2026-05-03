@@ -9,7 +9,7 @@ az ad app federated-credential create \
   --parameters '{
     "name": "github-actions-production",
     "issuer": "https://token.actions.githubusercontent.com",
-    "subject": "repo:vishnuvardhansankoti/talking-top-app:environment:production",
+    "subject": "repo:vishnuvardhansankoti/talking-tom-app:environment:production",
     "description": "GitHub Actions deploy to production",
     "audiences": ["api://AzureADTokenExchange"]
   }'
