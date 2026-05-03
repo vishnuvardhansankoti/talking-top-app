@@ -1,12 +1,6 @@
 name: Provision Azure Static Web App Infra
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'infra/static-web-app/**'
-      - '.github/workflows/infra-deploy.yml'
   workflow_dispatch:
 
 permissions:
