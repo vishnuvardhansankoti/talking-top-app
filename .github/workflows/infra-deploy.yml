@@ -50,13 +50,13 @@ jobs:
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Ensure resource group exists
-        uses: azure/cli@v2
-        with:
-          inlineScript: |
-            az group create \
-              --name "${{ vars.AZURE_RESOURCE_GROUP }}" \
-              --location "${{ vars.AZURE_LOCATION }}"
+      # - name: Ensure resource group exists
+      #   uses: azure/cli@v2
+      #   with:
+      #     inlineScript: |
+      #       az group create \
+      #         --name "${{ vars.AZURE_RESOURCE_GROUP }}" \
+      #         --location "${{ vars.AZURE_LOCATION }}"
 
       - name: Deploy Bicep template
         uses: azure/cli@v2
