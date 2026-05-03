@@ -56,7 +56,7 @@ Set these environment variables in the `production` GitHub Environment:
 | `AZURE_SUBSCRIPTION_ID` | Azure subscription GUID |
 | `AZURE_RESOURCE_GROUP` | `rg-talking-tom-production` |
 | `AZURE_LOCATION` | `eastus2` |
-| `AZURE_STATIC_WEB_APP_NAME` | `talking-tom-prod` |
+| `AZURE_STATIC_WEB_APP_NAME` | `talking-tom-app` |
 
 ## 5. Configure GitHub Environment Secrets
 
