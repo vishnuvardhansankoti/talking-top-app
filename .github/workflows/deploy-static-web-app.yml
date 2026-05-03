@@ -55,7 +55,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: static-site-build
-          path: .
+          path: build
 
       - name: Azure login
         uses: azure/login@v2
