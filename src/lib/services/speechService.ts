@@ -20,6 +20,7 @@ const SpeechRecognitionAPI =
 
 let _recognition: SpeechRecognition | null = null;
 let _active = false;
+let _finalTranscript = '';
 
 /** Returns true if the current browser supports the Web Speech API. */
 export function isSpeechRecognitionSupported(): boolean {
@@ -33,6 +34,7 @@ export function isSpeechRecognitionSupported(): boolean {
  */
 export function startSpeechRecognition(lang = 'en-US'): void {
 	if (!SpeechRecognitionAPI || _active) return;
+	_finalTranscript = '';
 
 	_recognition = new SpeechRecognitionAPI();
 	_recognition.lang = lang;
@@ -42,19 +44,18 @@ export function startSpeechRecognition(lang = 'en-US'): void {
 
 	_recognition.onresult = (event: SpeechRecognitionEvent) => {
 		let interim = '';
-		let final = '';
 
 		for (let i = event.resultIndex; i < event.results.length; i++) {
 			const result = event.results[i];
 			const text = result[0].transcript;
 			if (result.isFinal) {
-				final += text;
+				_finalTranscript += text;
 			} else {
 				interim += text;
 			}
 		}
 
-		const transcript = (final || interim).trim();
+		const transcript = `${_finalTranscript}${interim}`.trim();
 		if (transcript) {
 			audioState.update((s) => ({ ...s, transcript }));
 		}
@@ -96,6 +97,7 @@ export function startSpeechRecognition(lang = 'en-US'): void {
  */
 export function stopSpeechRecognition(): void {
 	_active = false;
+	_finalTranscript = '';
 	if (_recognition) {
 		try {
 			_recognition.stop();
@@ -108,5 +110,6 @@ export function stopSpeechRecognition(): void {
 
 /** Clear the transcript in the store (e.g. before a new recording). */
 export function clearTranscript(): void {
+	_finalTranscript = '';
 	audioState.update((s) => ({ ...s, transcript: '' }));
 }

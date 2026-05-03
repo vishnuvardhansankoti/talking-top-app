@@ -113,12 +113,12 @@ describe('synthesisService', () => {
 		expect(mockSynth.cancel).toHaveBeenCalledTimes(2);
 	});
 
-	it('speakTranscript applies default Tom pitch (2.0) and rate (1.15)', async () => {
+	it('speakTranscript applies default Tom pitch (2.0) and rate (1.09)', async () => {
 		const { speakTranscript } = await import('./synthesisService');
 		await speakTranscript('test pitch');
 		const u = mockSynth._getLastUtterance();
 		expect(u?.pitch).toBe(2);
-		expect(u?.rate).toBeCloseTo(1.15, 2);
+		expect(u?.rate).toBeCloseTo(1.09, 2);
 	});
 
 	it('speakTranscript clamps pitch to [0, 2]', async () => {

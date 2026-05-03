@@ -25,8 +25,6 @@ const CLIP_DURATION_MS: Record<LifestyleActionName, number> = {
 	SLEEPING: 6000 // auto-finish quickly to avoid indefinite sleep state
 };
 
-export const LIFESTYLE_COOLDOWN_MS = 30_000;
-
 let _actionTimer: ReturnType<typeof setTimeout> | null = null;
 
 /**
@@ -38,7 +36,6 @@ export function triggerLifestyleAction(action: LifestyleActionName): void {
 	const state = get(appState);
 
 	if (state.lifestyleAction !== null) return;
-	if (state.lifestyleCooldowns[action] > Date.now()) return;
 
 	requestAnimation(action);
 	playLifestyleSound(ACTION_TO_SOUND[action]);
@@ -75,14 +72,7 @@ function _finishLifestyleAction(action: LifestyleActionName): void {
 	if (action === 'SLEEPING') stopSleepSound();
 	if (action === 'PEEING') playLifestyleSound('flush');
 	onAnimationFinished();
-	appState.update((s) => ({
-		...s,
-		lifestyleAction: null,
-		lifestyleCooldowns: {
-			...s.lifestyleCooldowns,
-			[action]: Date.now() + LIFESTYLE_COOLDOWN_MS
-		}
-	}));
+	appState.update((s) => ({ ...s, lifestyleAction: null }));
 }
 
 /** Reset all state (used in tests). */

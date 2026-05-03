@@ -57,16 +57,7 @@ describe('lifestyleService', () => {
 			expect(requestAnimation).not.toHaveBeenCalled();
 		});
 
-		it('blocks if button is on cooldown', () => {
-			appState.update((s) => ({
-				...s,
-				lifestyleCooldowns: { ...s.lifestyleCooldowns, BATHING: Date.now() + 10_000 }
-			}));
-			triggerLifestyleAction('BATHING');
-			expect(requestAnimation).not.toHaveBeenCalled();
-		});
-
-		it('finishes BATHING after 4s, returns to IDLE, starts cooldown', () => {
+		it('finishes BATHING after 4s, returns to IDLE', () => {
 			triggerLifestyleAction('BATHING');
 			expect(get(appState).lifestyleAction).toBe('BATHING');
 
@@ -75,21 +66,18 @@ describe('lifestyleService', () => {
 			expect(onAnimationFinished).toHaveBeenCalledTimes(1);
 			const state = get(appState);
 			expect(state.lifestyleAction).toBeNull();
-			expect(state.lifestyleCooldowns.BATHING).toBeGreaterThan(Date.now());
 		});
 
 		it('finishes EATING after 3s', () => {
 			triggerLifestyleAction('EATING');
 			vi.advanceTimersByTime(3000);
 			expect(get(appState).lifestyleAction).toBeNull();
-			expect(get(appState).lifestyleCooldowns.EATING).toBeGreaterThan(Date.now());
 		});
 
 		it('finishes PEEING after 3s', () => {
 			triggerLifestyleAction('PEEING');
 			vi.advanceTimersByTime(3000);
 			expect(get(appState).lifestyleAction).toBeNull();
-			expect(get(appState).lifestyleCooldowns.PEEING).toBeGreaterThan(Date.now());
 		});
 
 		it('plays flush sound when PEEING finishes', () => {
@@ -104,17 +92,6 @@ describe('lifestyleService', () => {
 			vi.advanceTimersByTime(6_000);
 			expect(onAnimationFinished).toHaveBeenCalledTimes(1);
 			expect(get(appState).lifestyleAction).toBeNull();
-			expect(get(appState).lifestyleCooldowns.SLEEPING).toBeGreaterThan(Date.now());
-		});
-
-		it('cooldowns are independent per action', () => {
-			triggerLifestyleAction('BATHING');
-			vi.advanceTimersByTime(4000);
-			const state = get(appState);
-			expect(state.lifestyleCooldowns.BATHING).toBeGreaterThan(Date.now());
-			expect(state.lifestyleCooldowns.EATING).toBe(0);
-			expect(state.lifestyleCooldowns.PEEING).toBe(0);
-			expect(state.lifestyleCooldowns.SLEEPING).toBe(0);
 		});
 	});
 

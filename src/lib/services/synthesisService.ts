@@ -7,7 +7,7 @@
  *
  * Voice profile (Tom):
  *   pitch: 2.0  (max chipmunk)
- *   rate:  1.15 (slightly faster, energetic)
+ *   rate:  1.09 (about 5% slower than previous pace)
  *   volume: respects app volume setting
  *
  * Integration:
@@ -63,7 +63,7 @@ export function speakTranscript(
 
 		// Tom's voice profile — chipmunk-high pitch, energetic pace
 		utterance.pitch = Math.min(2, Math.max(0, options.pitch ?? 2.0));
-		utterance.rate = Math.min(2, Math.max(0.1, options.rate ?? 1.15));
+		utterance.rate = Math.min(2, Math.max(0.1, options.rate ?? 1.09));
 		utterance.volume = Math.min(1, Math.max(0, options.volume ?? 1.0));
 
 		// Prefer a higher-pitched built-in voice when available

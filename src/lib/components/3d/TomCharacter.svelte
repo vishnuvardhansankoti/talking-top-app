@@ -6,14 +6,14 @@
 	 * delegates all state transitions to animationService, and exposes
 	 * morph-target setter to the lip sync pipeline via synthesisService.
 	 */
-	import { T } from '@threlte/core';
+	import { T, useTask } from '@threlte/core';
 	import { useGltf, useGltfAnimations } from '@threlte/extras';
 	import { initAnimationService } from '$lib/services/animationService';
 	import { setMorphInfluenceCallback } from '$lib/services/synthesisService';
 	import type { AnimationName } from '$lib/types';
 	import type { MorphTargetName } from '$lib/services/lipSyncService';
 	import { appState } from '$lib/stores';
-	import type { AnimationAction, Mesh } from 'three';
+	import type { AnimationAction, Mesh, Object3D } from 'three';
 
 	// ─── Props ────────────────────────────────────────────────────────────────
 	interface TomCharacterProps {
@@ -23,7 +23,7 @@
 	let { onReady = undefined }: TomCharacterProps = $props();
 
 	// ─── Load GLTF ───────────────────────────────────────────────────────────────
-	const gltf = useGltf('/models/Tom.glb?v=2026-05-02-s7');
+	const gltf = useGltf('/models/Tom.glb?v=2026-05-02-s10');
 	// mixer = plain AnimationMixer (not a store); actions = currentWritable store
 	// useGltfAnimations already registers its own useTask to tick the mixer
 	const { mixer, actions } = useGltfAnimations(gltf);
@@ -42,12 +42,30 @@
 	let _eyeMeshes: Array<{ mesh: Mesh; originalScaleY: number }> = [];
 	let _sleepEyeStateApplied = false;
 
+	// ─── Procedural animation state ──────────────────────────────────────────────
+	let _jawBone: Object3D | null = null;
+	let _leftEarMesh: Mesh | null = null;
+	let _rightEarMesh: Mesh | null = null;
+	let _isCurrentlySleeping = false;
+
+	// Eye blink
+	let _blinkTimer = 0;
+	let _nextBlinkIn = 3.0;
+	let _blinkProgress = -1;
+	const BLINK_DURATION = 0.15;
+
+	// Ear twitch
+	let _earTwitchTimer = 0;
+	let _nextEarTwitchIn = 5.0;
+	let _earTwitchProgress = -1;
+	const EAR_TWITCH_DURATION = 0.50;
 	function cacheEyeMeshes(scene: { traverse: (cb: (obj: unknown) => void) => void }): void {
 		_eyeMeshes = [];
 		scene.traverse((obj) => {
 			const mesh = obj as Mesh;
 			if (!mesh?.isMesh) return;
-			if (!mesh.name || !/eye/i.test(mesh.name)) return;
+			// Include sclera, iris, pupil, and glints so blinking looks correct
+			if (!mesh.name || !/eye|iris|pupil|glint/i.test(mesh.name)) return;
 			_eyeMeshes.push({ mesh, originalScaleY: mesh.scale.y });
 		});
 	}
@@ -64,6 +82,10 @@
 		const idx = _headMesh.morphTargetDictionary[name];
 		if (idx === undefined) return;
 		_headMesh.morphTargetInfluences[idx] = Math.max(0, Math.min(1, weight));
+			// Drive jaw bone rotation for clearly visible mouth movement
+			if (name === 'mouthOpen' && _jawBone) {
+				_jawBone.rotation.x = weight * 0.45; // up to ~26° open
+			}
 	}
 
 	// ─── Mark model loaded when scene is available ───────────────────────────────
@@ -85,6 +107,13 @@
 				// Cache likely eye meshes so sleep mode can close actual model eyes.
 				cacheEyeMeshes(gltfData.scene);
 
+				// Cache jaw bone and ear meshes for procedural animations
+				gltfData.scene.traverse((obj) => {
+					const node = obj as Object3D;
+					if (node.name === 'Bone_jaw') _jawBone = node;
+					if (node.name === 'Tom_LeftEar') _leftEarMesh = node as Mesh;
+					if (node.name === 'Tom_RightEar') _rightEarMesh = node as Mesh;
+				});
 				// Wire morph setter into the synthesis/lip-sync pipeline
 				setMorphInfluenceCallback(setMorphInfluence);
 
@@ -102,12 +131,54 @@
 
 	$effect(() => {
 		const isSleeping = $appState.lifestyleAction === 'SLEEPING';
+		_isCurrentlySleeping = isSleeping;
 		if (isSleeping === _sleepEyeStateApplied) return;
 		_sleepEyeStateApplied = isSleeping;
 		setSleepEyesClosed(isSleeping);
 	});
-</script>
 
+	// ─── Per-frame procedural animations ────────────────────────────────────────
+	useTask((delta: number) => {
+		// Eye blinking — suppressed during sleep (eyes already closed)
+		if (!_isCurrentlySleeping && _eyeMeshes.length > 0) {
+			_blinkTimer += delta;
+			if (_blinkTimer >= _nextBlinkIn && _blinkProgress < 0) {
+				_blinkProgress = 0;
+				_blinkTimer = 0;
+				_nextBlinkIn = 2.0 + Math.random() * 3.5;
+			}
+			if (_blinkProgress >= 0) {
+				_blinkProgress += delta / BLINK_DURATION;
+				const t = Math.min(1, _blinkProgress);
+				const eyeScaleY = Math.max(0.04, 1 - Math.sin(Math.PI * t));
+				for (const e of _eyeMeshes) e.mesh.scale.y = eyeScaleY;
+				if (_blinkProgress >= 1) {
+					_blinkProgress = -1;
+					for (const e of _eyeMeshes) e.mesh.scale.y = e.originalScaleY;
+				}
+			}
+		}
+
+		// Ear twitches — periodic, subtle, happens anytime including sleep
+		_earTwitchTimer += delta;
+		if (_earTwitchTimer >= _nextEarTwitchIn && _earTwitchProgress < 0) {
+			_earTwitchProgress = 0;
+			_earTwitchTimer = 0;
+			_nextEarTwitchIn = 3.0 + Math.random() * 5.0;
+		}
+		if (_earTwitchProgress >= 0) {
+			_earTwitchProgress += delta / EAR_TWITCH_DURATION;
+			const angle = Math.sin(Math.PI * Math.min(1, _earTwitchProgress)) * 0.18;
+			if (_leftEarMesh) _leftEarMesh.rotation.z = 0.15 + angle;
+			if (_rightEarMesh) _rightEarMesh.rotation.z = -0.15 - angle;
+			if (_earTwitchProgress >= 1) {
+				_earTwitchProgress = -1;
+				if (_leftEarMesh) _leftEarMesh.rotation.z = 0.15;
+				if (_rightEarMesh) _rightEarMesh.rotation.z = -0.15;
+			}
+		}
+	});
+</script>
 {#await gltf then gltfData}
 	{#if gltfData?.scene}
 		<!-- Lift Tom further so model features are clearly above bottom controls -->
