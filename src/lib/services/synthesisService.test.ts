@@ -85,20 +85,20 @@ describe('synthesisService', () => {
 
 	it('speakTranscript resolves immediately for empty string', async () => {
 		const { speakTranscript } = await import('./synthesisService');
-		await expect(speakTranscript('')).resolves.toBeUndefined();
+		await expect(speakTranscript('')).resolves.toBe(false);
 		expect(mockSynth.speak).not.toHaveBeenCalled();
 	});
 
 	it('speakTranscript resolves immediately for whitespace-only string', async () => {
 		const { speakTranscript } = await import('./synthesisService');
-		await expect(speakTranscript('   ')).resolves.toBeUndefined();
+		await expect(speakTranscript('   ')).resolves.toBe(false);
 		expect(mockSynth.speak).not.toHaveBeenCalled();
 	});
 
 	it('speakTranscript calls synth.speak with an utterance', async () => {
 		const { speakTranscript } = await import('./synthesisService');
 		const p = speakTranscript('hello world');
-		await p;
+		await expect(p).resolves.toBe(true);
 		expect(mockSynth.speak).toHaveBeenCalledTimes(1);
 		const utterance = mockSynth._getLastUtterance();
 		expect(utterance).toBeTruthy();
@@ -143,7 +143,7 @@ describe('synthesisService', () => {
 		vi.stubGlobal('SpeechSynthesisUtterance', undefined);
 		vi.resetModules();
 		const { speakTranscript } = await import('./synthesisService');
-		await expect(speakTranscript('hello')).resolves.toBeUndefined();
+		await expect(speakTranscript('hello')).resolves.toBe(false);
 	});
 
 	it('cancelSpeech calls synth.cancel', async () => {

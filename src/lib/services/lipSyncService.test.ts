@@ -153,8 +153,8 @@ describe('boundary event → morph weights', () => {
 		startLipSync(utterance);
 		utterance.onboundary!(makeBoundaryEvent(charLength) as unknown as Event as SpeechSynthesisEvent);
 
-		const open = morphCalls.find(([n]) => n === 'mouthOpen')?.[1] ?? -1;
-		const wide = morphCalls.find(([n]) => n === 'mouthWide')?.[1] ?? -1;
+		const open = Math.max(...morphCalls.filter(([n]) => n === 'mouthOpen').map(([, w]) => w), -1);
+		const wide = Math.max(...morphCalls.filter(([n]) => n === 'mouthWide').map(([, w]) => w), -1);
 
 		expect(open).toBeCloseTo(expectedOpen, 5);
 		expect(wide).toBeCloseTo(expectedWide, 5);
@@ -242,18 +242,18 @@ describe('graceful degradation (no onboundary fired)', () => {
 		}).not.toThrow();
 	});
 
-	it('does not throw after 500ms timeout without boundary events', () => {
+	it('does not throw after fallback timeout without boundary events', () => {
 		const morphCalls: Array<[string, number]> = [];
 		registerMorphSetter((name, weight) => morphCalls.push([name, weight]));
 
 		const utterance = makeUtterance();
 		startLipSync(utterance);
 
-		// Advance past the 500 ms idle-fallback timer
-		vi.advanceTimersByTime(600);
+		// Advance past the idle-fallback timer
+		vi.advanceTimersByTime(200);
 
 		// Flush idle-fallback rAF — should not throw
-		expect(() => flushRaf(700)).not.toThrow();
+		expect(() => flushRaf(250)).not.toThrow();
 
 		stopLipSync();
 	});
@@ -266,8 +266,8 @@ describe('graceful degradation (no onboundary fired)', () => {
 		startLipSync(utterance);
 
 		// Trigger idle fallback
-		vi.advanceTimersByTime(600);
-		flushRaf(600);
+		vi.advanceTimersByTime(200);
+		flushRaf(250);
 
 		const openCalls = morphCalls.filter(([n]) => n === 'mouthOpen').map(([, w]) => w);
 		for (const w of openCalls) {

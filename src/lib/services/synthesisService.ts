@@ -21,10 +21,27 @@ import { requestAnimation } from '$lib/services/animationService';
 import { registerMorphSetter, startLipSync, stopLipSync } from '$lib/services/lipSyncService';
 import type { SetMorphInfluenceFn } from '$lib/services/lipSyncService';
 
-const synth = typeof window !== 'undefined' ? (window.speechSynthesis ?? null) : null;
+const SPEECH_START_TIMEOUT_MS = 1500;
+const SPEECH_MIN_TIMEOUT_MS = 4000;
+const SPEECH_MAX_TIMEOUT_MS = 18000;
+
+function isIOSChrome(): boolean {
+	if (typeof navigator === 'undefined') return false;
+	const ua = navigator.userAgent || '';
+	return /iP(hone|ad|od)/i.test(ua) && /CriOS/i.test(ua);
+}
 
 /** Stores the morph-influence setter registered by TomCharacter. */
 let _morphInfluenceFn: SetMorphInfluenceFn | null = null;
+
+function getSynthesis(): SpeechSynthesis | null {
+	return typeof window !== 'undefined' ? (window.speechSynthesis ?? null) : null;
+}
+
+function estimateSpeechTimeoutMs(text: string): number {
+	const estimated = 1000 + text.length * 120;
+	return Math.max(SPEECH_MIN_TIMEOUT_MS, Math.min(SPEECH_MAX_TIMEOUT_MS, estimated));
+}
 
 /**
  * Register the morph-influence callback from TomCharacter.
@@ -37,7 +54,7 @@ export function setMorphInfluenceCallback(fn: SetMorphInfluenceFn): void {
 
 /** Returns true if SpeechSynthesis is available in the current browser. */
 export function isSpeechSynthesisSupported(): boolean {
-	return Boolean(synth) && typeof SpeechSynthesisUtterance !== 'undefined';
+	return Boolean(getSynthesis()) && typeof SpeechSynthesisUtterance !== 'undefined';
 }
 
 /**
@@ -50,21 +67,50 @@ export function isSpeechSynthesisSupported(): boolean {
 export function speakTranscript(
 	text: string,
 	options: { pitch?: number; rate?: number; volume?: number } = {}
-): Promise<void> {
+): Promise<boolean> {
+	const synth = getSynthesis();
+
 	if (!isSpeechSynthesisSupported() || !text.trim()) {
-		return Promise.resolve();
+		return Promise.resolve(false);
 	}
 
 	// Cancel any current speech before starting
 	synth!.cancel();
+	synth!.resume?.();
 
 	return new Promise((resolve) => {
 		const utterance = new SpeechSynthesisUtterance(text);
+		let started = false;
+		let settled = false;
+		let startTimeout: ReturnType<typeof setTimeout> | null = null;
+		let endTimeout: ReturnType<typeof setTimeout> | null = null;
+
+		const clearTimers = () => {
+			if (startTimeout) {
+				clearTimeout(startTimeout);
+				startTimeout = null;
+			}
+			if (endTimeout) {
+				clearTimeout(endTimeout);
+				endTimeout = null;
+			}
+		};
+
+		const finish = (ok: boolean) => {
+			if (settled) return;
+			settled = true;
+			clearTimers();
+			audioState.update((s) => ({ ...s, isPlaying: false }));
+			stopLipSync();
+			requestAnimation('IDLE');
+			resolve(ok);
+		};
 
 		// Tom's voice profile — chipmunk-high pitch, energetic pace
 		utterance.pitch = Math.min(2, Math.max(0, options.pitch ?? 2.0));
 		utterance.rate = Math.min(2, Math.max(0.1, options.rate ?? 1.09));
 		utterance.volume = Math.min(1, Math.max(0, options.volume ?? 1.0));
+		utterance.lang = 'en-US';
 
 		// Prefer a higher-pitched built-in voice when available
 		const voices = synth!.getVoices();
@@ -78,34 +124,47 @@ export function speakTranscript(
 		if (preferred) utterance.voice = preferred;
 
 		utterance.onstart = () => {
+			started = true;
+			if (startTimeout) {
+				clearTimeout(startTimeout);
+				startTimeout = null;
+			}
+			if (_morphInfluenceFn) {
+				// Start lip sync only when speech actually starts to reduce A/V drift on iOS.
+				startLipSync(utterance, {
+					fallbackDelayMs: isIOSChrome() ? 0 : 120,
+					kickoff: true
+				});
+			}
 			audioState.update((s) => ({ ...s, isPlaying: true }));
 			requestAnimation('SPEAKING');
 		};
 
 		utterance.onend = () => {
-			audioState.update((s) => ({ ...s, isPlaying: false }));
-			stopLipSync();
-			requestAnimation('IDLE');
-			resolve();
+			finish(started);
 		};
 
 		utterance.onerror = () => {
-			audioState.update((s) => ({ ...s, isPlaying: false }));
-			stopLipSync();
-			requestAnimation('IDLE');
-			resolve(); // resolve rather than reject — non-fatal
+			finish(false);
 		};
 
+		startTimeout = setTimeout(() => {
+			synth!.cancel();
+			finish(false);
+		}, SPEECH_START_TIMEOUT_MS);
+
+		endTimeout = setTimeout(() => {
+			synth!.cancel();
+			finish(false);
+		}, estimateSpeechTimeoutMs(text));
+
 		synth!.speak(utterance);
-		if (_morphInfluenceFn) {
-			startLipSync(utterance);
-		}
 	});
 }
 
 /** Cancel any in-progress speech immediately. */
 export function cancelSpeech(): void {
-	synth?.cancel();
+	getSynthesis()?.cancel();
 	audioState.update((s) => ({ ...s, isPlaying: false }));
 }
 
@@ -114,6 +173,7 @@ export function cancelSpeech(): void {
  * Call once on app init to prime the voice list.
  */
 export function loadVoices(): Promise<SpeechSynthesisVoice[]> {
+	const synth = getSynthesis();
 	if (!isSpeechSynthesisSupported()) return Promise.resolve([]);
 
 	return new Promise((resolve) => {

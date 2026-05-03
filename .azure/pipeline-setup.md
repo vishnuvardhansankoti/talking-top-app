@@ -33,7 +33,7 @@ export AZURE_TENANT_ID='508e46f2-cd47-4e73-9d05-bede96f92469'
 export AZURE_LOCATION='eastus2'
 export PLATFORM_IDENTITY_RESOURCE_GROUP='rg-talking-tom-platform'
 export PLATFORM_IDENTITY_NAME='id-talking-tom-gha'
-export PRODUCTION_RESOURCE_GROUP='rg-talking-tom-production'
+export PRODUCTION_RESOURCE_GROUP='products-pocs-rg'
 
 bash scripts/setup-azure-auth-for-pipeline.sh
 ```

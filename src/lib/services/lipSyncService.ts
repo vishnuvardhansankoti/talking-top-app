@@ -10,7 +10,7 @@
  *   mouthWide  = min(0.6, 0.10 × syllables)
  *
  * Idle fallback (Firefox/Safari — no onboundary support):
- *   Activates 500 ms after onstart if no boundary event fires.
+ *   Activates 120 ms after onstart if no boundary event fires.
  *   mouthOpen(t) = clamp(0.15 × sin(2π × 2.5 × t) + 0.1, 0, 0.3)
  *
  * Decay:
@@ -19,6 +19,10 @@
 
 export type MorphTargetName = 'mouthOpen' | 'mouthWide';
 export type SetMorphInfluenceFn = (name: MorphTargetName, weight: number) => void;
+export interface LipSyncOptions {
+	fallbackDelayMs?: number;
+	kickoff?: boolean;
+}
 
 // ─── Module state ────────────────────────────────────────────────────────────
 
@@ -28,6 +32,7 @@ let _fallbackRafId: number | null = null;
 let _fallbackTimerId: ReturnType<typeof setTimeout> | null = null;
 let _boundaryFired = false;
 let _active = false;
+const FALLBACK_START_DELAY_MS = 120;
 
 // ─── Public API ──────────────────────────────────────────────────────────────
 
@@ -43,22 +48,30 @@ export function registerMorphSetter(fn: SetMorphInfluenceFn): void {
  * Begin lip-sync for the given utterance.
  * Registers onboundary handler; starts idle fallback timer.
  */
-export function startLipSync(utterance: SpeechSynthesisUtterance): void {
+export function startLipSync(utterance: SpeechSynthesisUtterance, options: LipSyncOptions = {}): void {
 	_stopAllTimers();
 	_boundaryFired = false;
 	_active = true;
+	const fallbackDelay = Math.max(0, options.fallbackDelayMs ?? FALLBACK_START_DELAY_MS);
+
+	if (options.kickoff !== false) {
+		// Immediate, short mouth pulse at speech start to reduce perceived onset lag.
+		_setMorph('mouthOpen', 0.2);
+		_setMorph('mouthWide', 0.06);
+		_startDecay(0.2, 0.06, 90);
+	}
 
 	// Wire boundary events
 	utterance.onboundary = (event: SpeechSynthesisEvent) => {
 		_handleBoundary(event);
 	};
 
-	// Idle fallback: if no boundary fires within 500 ms, use sine-wave mouth
+	// Idle fallback: if no boundary fires quickly, use sine-wave mouth
 	_fallbackTimerId = setTimeout(() => {
 		if (!_boundaryFired && _active) {
 			_startIdleFallback();
 		}
-	}, 500);
+	}, fallbackDelay);
 }
 
 /**

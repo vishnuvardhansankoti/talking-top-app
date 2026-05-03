@@ -34,8 +34,11 @@
 		if (transcript && isSpeechSynthesisSupported()) {
 			// Primary path: speak transcript in Tom's funny high-pitched voice
 			const pitchScale = ($appState.settings.pitchShift ?? 1.5) / 1.5;
-			await speakTranscript(transcript, { pitch: Math.min(2, pitchScale * 2.0) });
-		} else if (blob) {
+			const spoken = await speakTranscript(transcript, { pitch: Math.min(2, pitchScale * 2.0) });
+			if (spoken) return;
+		}
+
+		if (blob) {
 			// Fallback: raw audio playback with pitch-shift
 			await playbackWithPitchShift(blob, $appState.settings.pitchShift);
 		}

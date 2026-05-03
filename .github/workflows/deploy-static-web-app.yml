@@ -1,32 +1,6 @@
 name: Deploy Azure Static Web App
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'src/**'
-      - 'static/**'
-      - 'scripts/**'
-      - 'package.json'
-      - 'package-lock.json'
-      - 'svelte.config.js'
-      - 'vite.config.ts'
-      - 'tsconfig.json'
-      - '.github/workflows/deploy-static-web-app.yml'
-  pull_request:
-    branches:
-      - main
-    paths:
-      - 'src/**'
-      - 'static/**'
-      - 'scripts/**'
-      - 'package.json'
-      - 'package-lock.json'
-      - 'svelte.config.js'
-      - 'vite.config.ts'
-      - 'tsconfig.json'
-      - '.github/workflows/deploy-static-web-app.yml'
   workflow_dispatch:
 
 permissions:
@@ -72,7 +46,6 @@ jobs:
     name: Deploy production
     runs-on: ubuntu-latest
     needs: validate
-    if: github.event_name != 'pull_request'
     environment: production
     steps:
       - name: Check out repository
